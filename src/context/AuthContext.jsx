@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from "react";
+import { authApi, API_BASE_URL } from "../services/api";
 
 export const AuthContext = createContext();
 
@@ -9,26 +10,18 @@ export const AuthProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(true);
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
-
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/auth/me`, {
-          credentials: "include",
-        });
-        const data = await res.json();
+        const data = await authApi.getMe();
         if (data.success && data.user) {
           setUser(data.user);
           localStorage.setItem("user", JSON.stringify(data.user));
-        } else {
-          // If check failed and no local user, reset
-          if (!localStorage.getItem("user")) {
-            setUser(null);
-          }
+        } else if (!localStorage.getItem("user")) {
+          setUser(null);
         }
       } catch (err) {
-        console.error("Auth check failed:", err);
+        console.warn("Auth session check notice:", err.message);
       } finally {
         setLoading(false);
       }
@@ -43,10 +36,7 @@ export const AuthProvider = ({ children }) => {
 
   const logoutUser = async () => {
     try {
-      await fetch(`${API_URL}/api/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
+      await authApi.logout();
     } catch (err) {
       console.error("Logout error:", err);
     }
@@ -63,7 +53,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, loginUser, logoutUser, updateUser, API_URL }}>
+    <AuthContext.Provider value={{ user, loading, loginUser, logoutUser, updateUser, API_URL: API_BASE_URL }}>
       {children}
     </AuthContext.Provider>
   );

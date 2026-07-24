@@ -1,9 +1,9 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { X, Camera, User, Mail, Phone, Info } from "lucide-react";
-import { AuthContext } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 
 export default function ProfileModal({ isOpen, onClose }) {
-  const { user, updateUser, API_URL } = useContext(AuthContext);
+  const { user, updateUser, API_URL } = useAuth();
   const [name, setName] = useState(user?.name || "");
   const [bio, setBio] = useState(user?.bio || "");
   const [phonenumber, setPhonenumber] = useState(user?.phonenumber || "");
@@ -37,7 +37,7 @@ export default function ProfileModal({ isOpen, onClose }) {
 
     try {
       const res = await fetch(`${API_URL}/api/users/profile`, {
-        method: "POST",
+        method: "PUT",
         body: formData,
         credentials: "include",
       });
@@ -58,21 +58,21 @@ export default function ProfileModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 font-sans">
-      <div className="bg-[#13151f] border border-[#232636] w-full max-w-md rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] p-6 relative">
+    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 font-sans animate-fade-in select-none">
+      <div className="bg-[#121420] border border-[#232636] w-full max-w-md rounded-2xl shadow-2xl p-6 relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition"
+          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-white/10 transition"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <h2 className="text-2xl font-serif text-white mb-6 text-center">Edit Profile</h2>
+        <h2 className="text-xl font-serif text-white mb-6 text-center">Edit Profile</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Avatar Upload */}
           <div className="flex flex-col items-center mb-6">
-            <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-[#0052FF]/60 shadow-accent btn-gradient flex items-center justify-center">
+            <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-[#0052FF]/60 shadow-accent btn-gradient flex items-center justify-center group cursor-pointer">
               {imagePreview ? (
                 <img src={imagePreview} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
@@ -80,13 +80,14 @@ export default function ProfileModal({ isOpen, onClose }) {
                   {name ? name.charAt(0).toUpperCase() : "U"}
                 </span>
               )}
-              <label className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 cursor-pointer transition">
-                <Camera className="w-6 h-6 text-white" />
+              <label className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                <Camera className="w-6 h-6 text-white mb-1" />
+                <span className="text-[10px] font-mono text-white">Change</span>
                 <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
               </label>
             </div>
             <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400 mt-2">
-              Click photo to update
+              Click avatar to upload new image
             </span>
           </div>
 
@@ -102,7 +103,7 @@ export default function ProfileModal({ isOpen, onClose }) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full h-10 pl-10 pr-3.5 bg-[#181a26] border border-[#2a2e42] text-white text-sm rounded-xl focus:outline-none focus:border-[#0052FF] font-medium"
+                className="w-full h-10 pl-10 pr-3.5 bg-[#181a26] border border-[#2a2e42] text-white text-sm rounded-xl focus:outline-none focus:border-[#0052FF] focus:ring-1 focus:ring-[#0052FF] font-medium"
               />
             </div>
           </div>
@@ -135,7 +136,7 @@ export default function ProfileModal({ isOpen, onClose }) {
                 value={phonenumber}
                 onChange={(e) => setPhonenumber(e.target.value)}
                 placeholder="+1 (555) 000-0000"
-                className="w-full h-10 pl-10 pr-3.5 bg-[#181a26] border border-[#2a2e42] text-white text-sm rounded-xl focus:outline-none focus:border-[#0052FF] font-medium"
+                className="w-full h-10 pl-10 pr-3.5 bg-[#181a26] border border-[#2a2e42] text-white text-sm rounded-xl focus:outline-none focus:border-[#0052FF] focus:ring-1 focus:ring-[#0052FF] font-medium"
               />
             </div>
           </div>
@@ -152,7 +153,7 @@ export default function ProfileModal({ isOpen, onClose }) {
                 onChange={(e) => setBio(e.target.value)}
                 rows="3"
                 placeholder="Write a short bio..."
-                className="w-full pl-10 pr-3.5 py-2.5 bg-[#181a26] border border-[#2a2e42] text-white text-sm rounded-xl focus:outline-none focus:border-[#0052FF] custom-scroll font-medium"
+                className="w-full pl-10 pr-3.5 py-2.5 bg-[#181a26] border border-[#2a2e42] text-white text-sm rounded-xl focus:outline-none focus:border-[#0052FF] focus:ring-1 focus:ring-[#0052FF] custom-scroll font-medium"
               />
             </div>
           </div>
@@ -160,7 +161,7 @@ export default function ProfileModal({ isOpen, onClose }) {
           <button
             type="submit"
             disabled={saving}
-            className="w-full h-11 btn-gradient text-white font-semibold text-sm rounded-xl transition-all shadow-accent hover:shadow-accent-lg hover:-translate-y-0.5 active:scale-[0.98] flex items-center justify-center mt-4 disabled:opacity-50"
+            className="w-full h-11 btn-gradient text-white font-semibold text-sm rounded-xl transition-all shadow-accent hover:shadow-accent-lg active:scale-[0.98] flex items-center justify-center mt-4 disabled:opacity-50"
           >
             {saving ? "Saving Changes..." : "Save Profile"}
           </button>

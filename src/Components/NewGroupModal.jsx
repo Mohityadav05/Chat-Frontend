@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { Search, X, Users, Check } from "lucide-react";
-import { AuthContext } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
+import { userApi, chatApi } from "../services/api";
 
 export default function NewGroupModal({ isOpen, onClose, onSelectConversation }) {
-  const { API_URL } = useContext(AuthContext);
+  const { API_URL } = useAuth();
   const [groupName, setGroupName] = useState("");
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState([]);
@@ -23,10 +24,7 @@ export default function NewGroupModal({ isOpen, onClose, onSelectConversation })
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/api/users/search?search=${encodeURIComponent(search)}`, {
-        credentials: "include",
-      });
-      const data = await res.json();
+      const data = await userApi.searchUsers(search);
       if (data.success) {
         setUsers(data.users);
       }
@@ -58,16 +56,10 @@ export default function NewGroupModal({ isOpen, onClose, onSelectConversation })
 
     setCreating(true);
     try {
-      const res = await fetch(`${API_URL}/api/conversations/group`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          groupName: groupName.trim(),
-          memberIds: selectedUserIds,
-        }),
-        credentials: "include",
+      const data = await chatApi.createGroup({
+        groupName: groupName.trim(),
+        memberIds: selectedUserIds,
       });
-      const data = await res.json();
       if (data.success) {
         onSelectConversation(data.conversation);
         onClose();
@@ -75,7 +67,7 @@ export default function NewGroupModal({ isOpen, onClose, onSelectConversation })
         alert(data.message || "Failed to create group");
       }
     } catch (err) {
-      console.error("Create group error:", err);
+      alert(err.message || "Error creating group");
     } finally {
       setCreating(false);
     }
@@ -84,16 +76,16 @@ export default function NewGroupModal({ isOpen, onClose, onSelectConversation })
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 font-sans">
-      <div className="bg-[#13151f] border border-[#232636] w-full max-w-md rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8)] p-6 relative">
+    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 font-sans animate-fade-in select-none">
+      <div className="bg-[#121420] border border-[#232636] w-full max-w-md rounded-2xl shadow-2xl p-6 relative">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition"
+          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-white/10 transition"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <h2 className="text-2xl font-serif text-white mb-1 flex items-center gap-2.5">
+        <h2 className="text-xl font-serif text-white mb-1 flex items-center gap-2.5">
           <Users className="w-5 h-5 text-[#0052FF]" /> Create New Group
         </h2>
         <p className="text-xs text-slate-400 mb-5">Set a group name and invite members to collaborate.</p>
@@ -109,7 +101,7 @@ export default function NewGroupModal({ isOpen, onClose, onSelectConversation })
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
               required
-              className="w-full h-10 px-3.5 bg-[#181a26] border border-[#2a2e42] text-white text-sm rounded-xl focus:outline-none focus:border-[#0052FF] placeholder-slate-500 font-medium"
+              className="w-full h-10 px-3.5 bg-[#181a26] border border-[#2a2e42] text-white text-sm rounded-xl focus:outline-none focus:border-[#0052FF] focus:ring-1 focus:ring-[#0052FF] placeholder-slate-500 font-medium"
             />
           </div>
 
@@ -174,7 +166,7 @@ export default function NewGroupModal({ isOpen, onClose, onSelectConversation })
           <button
             type="submit"
             disabled={creating}
-            className="w-full h-11 btn-gradient text-white font-semibold text-sm rounded-xl transition-all shadow-accent hover:shadow-accent-lg hover:-translate-y-0.5 active:scale-[0.98] flex items-center justify-center disabled:opacity-50"
+            className="w-full h-11 btn-gradient text-white font-semibold text-sm rounded-xl transition-all shadow-accent hover:shadow-accent-lg active:scale-[0.98] flex items-center justify-center disabled:opacity-50"
           >
             {creating ? "Creating Group..." : "Create Group"}
           </button>

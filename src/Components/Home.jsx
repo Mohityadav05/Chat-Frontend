@@ -51,11 +51,11 @@ export default function Home() {
     }
   };
 
-  // Listen to socket message updates to refresh conversation list order
+  // Real-time conversation list updates on new messages or new conversations
   useEffect(() => {
     if (!socket) return;
 
-    const handleReceiveMessage = () => {
+    const handleReceiveMessage = (msg) => {
       fetchConversations();
     };
 
@@ -70,6 +70,14 @@ export default function Home() {
   };
 
   const handleSelectConversation = (conv) => {
+    if (!conv) return;
+    setConversations((prev) => {
+      const exists = prev.some((c) => c._id === conv._id);
+      if (exists) {
+        return prev.map((c) => (c._id === conv._id ? conv : c));
+      }
+      return [conv, ...prev];
+    });
     setSelectedConversation(conv);
   };
 
